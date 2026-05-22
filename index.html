@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="img/Designer.ico" type="image/x-icon">
+  <title>SCAT · Control de Acondicionamiento de Trigo</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-block">
+        <img src="img/molitalia.png" alt="Logo" width="80" height="30">
+        <!--<div class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="2" y="14" width="28" height="4" rx="1" fill="currentColor" opacity=".3"/>
+            <rect x="7" y="8" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M12 16 Q16 10 20 16 Q16 22 12 16Z" fill="currentColor"/>
+            <circle cx="16" cy="4" r="2" fill="currentColor"/>
+            <circle cx="16" cy="28" r="2" fill="currentColor"/>
+            <circle cx="4" cy="16" r="2" fill="currentColor"/>
+            <circle cx="28" cy="16" r="2" fill="currentColor"/>
+          </svg>
+        </div>-->
+        <div class="logo-text">
+          <span class="logo-title">S.C.A.T</span>
+          <span class="logo-sub">v1.0·HMI Control</span>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Colapsar menú">&#9776;</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">MÓDULOS</div>
+      <button class="nav-item active" data-section="dashboard" onclick="switchSection('dashboard')">
+        <span class="nav-icon">⬛</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-section="registro" onclick="switchSection('registro')">
+        <span class="nav-icon">✚</span>
+        <span class="nav-label">Nuevo Registro</span>
+      </button>
+      <button class="nav-item" data-section="tabla" onclick="switchSection('tabla')">
+        <span class="nav-icon">≡</span>
+        <span class="nav-label">Registros</span>
+      </button>
+      <button class="nav-item" data-section="alertas" onclick="switchSection('alertas')">
+        <span class="nav-icon">◉</span>
+        <span class="nav-label">Alertas</span>
+        <span class="nav-badge" id="alertBadge">0</span>
+      </button>
+
+      <div class="nav-section-label" style="margin-top:16px;">SISTEMA</div>
+      <button class="nav-item" onclick="exportToExcel()">
+        <span class="nav-icon">↓</span>
+        <span class="nav-label">Exportar Excel</span>
+      </button>
+      <button class="nav-item danger" onclick="confirmClearAll()">
+        <span class="nav-icon">⊗</span>
+        <span class="nav-label">Limpiar Registros</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="system-clock" id="systemClock">--:--:--</div>
+      <div class="system-date" id="systemDate">--/--/----</div>
+      <div class="connection-status">
+        <span class="dot-pulse"></span>
+        <span>LOCAL STORAGE ACTIVO</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════ -->
+  <main class="main-content" id="mainContent">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <div class="breadcrumb" id="breadcrumb">Control de Acondicionamiento · Trigo</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-indicator">
+          <span class="pulse-dot"></span>
+          <span>EN VIVO</span>
+        </div>
+        <div class="update-counter" id="updateCounter">Actualizado: --:--</div>
+      </div>
+    </header>
+
+    <!-- ─── SECCIÓN: DASHBOARD ─── -->
+    <section class="section active" id="section-dashboard">
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-total">
+          <div class="kpi-icon">▦</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiTotal">0</div>
+            <div class="kpi-label">Total Lotes</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-process">
+          <div class="kpi-icon">◎</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiProcess">0</div>
+            <div class="kpi-label">En Acondicionamiento</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-ready">
+          <div class="kpi-icon">✔</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiReady">0</div>
+            <div class="kpi-label">Listos para Molienda</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-expired">
+          <div class="kpi-icon">✕</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiExpired">0</div>
+            <div class="kpi-label">Vencidos</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-stock">
+          <div class="kpi-icon">⬡</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiStock">0 kg</div>
+            <div class="kpi-label">Stock Total</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-consumed">
+          <div class="kpi-icon">≈</div>
+          <div class="kpi-body">
+            <div class="kpi-value" id="kpiConsumed">0 kg</div>
+            <div class="kpi-label">Consumo Total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOTES ACTIVOS (cards vivas) -->
+      <div class="section-header">
+        <h2 class="section-title">LOTES ACTIVOS</h2>
+        <div class="section-subtitle">Actualización automática cada 60 s</div>
+      </div>
+      <div class="active-lots-grid" id="activeLots">
+        <div class="empty-state" id="emptyActiveLots">
+          <div class="empty-icon">◫</div>
+          <div class="empty-title">Sin lotes activos</div>
+          <div class="empty-sub">Registre un nuevo lote para comenzar el monitoreo</div>
+        </div>
+      </div>
+
+      <!-- ÚLTIMOS REGISTROS RÁPIDOS -->
+      <div class="section-header" style="margin-top:32px;">
+        <h2 class="section-title">ÚLTIMOS 5 REGISTROS</h2>
+        <button class="btn-link" onclick="switchSection('tabla')">Ver todos →</button>
+      </div>
+      <div class="quick-table-wrap">
+        <table class="quick-table" id="quickTable">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Inicio</th>
+              <th>Progreso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="quickTableBody">
+            <tr><td colspan="5" class="td-empty">Sin registros</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── SECCIÓN: NUEVO REGISTRO ─── -->
+    <section class="section" id="section-registro">
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-title">REGISTRO DE LOTE DE TRIGO</div>
+          <div class="form-card-sub">Complete todos los campos obligatorios</div>
+        </div>
+        <form id="wheatForm" onsubmit="handleFormSubmit(event)" autocomplete="off">
+          <input type="hidden" id="editId" />
+
+          <div class="form-grid">
+            <!-- Fila 1 -->
+            <div class="form-group">
+              <label class="form-label">Fecha <span class="req">*</span></label>
+              <input type="date" id="fFecha" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Código de Trigo <span class="req">*</span></label>
+              <input type="text" id="fCodigo" class="form-input" placeholder="Ej: 123456" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tipo de Trigo <span class="req">*</span></label>
+              <select id="fTipo" class="form-input" required>
+                <option value="">— Seleccionar —</option>
+                <option>Trigo AD Canad G°2</option>
+                <option>Trigo Soft RW</option>
+                <option>Trigo Pan Argentino</option>
+                <option>Trigo Pan CWRS</option>
+                <option>Trigo Canada CPSR</option>
+                <option>TRIGO HRW 11.0%</option>
+                <option>TRIGO HRW 12.0%</option>
+              </select>
+            </div>
+            <!-- Fila 2 -->
+            <div class="form-group">
+              <label class="form-label">Cantidad Inicial (kg) <span class="req">*</span></label>
+              <input type="number" id="fCantidad" class="form-input" placeholder="0.00" min="0" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Turno <span class="req">*</span></label>
+              <select id="fTurno" class="form-input" required>
+                <option value="">— Seleccionar —</option>
+                <option>Mañana (06:00–14:00)</option>
+                <option>Tarde (14:00–22:00)</option>
+                <option>Noche (22:00–06:00)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Operador <span class="req">*</span></label>
+              <input type="text" id="fOperador" class="form-input" placeholder="Nombre del operador" required />
+            </div>
+            <!-- Fila 3 -->
+            <div class="form-group">
+              <label class="form-label">Hora Inicio <span class="req">*</span></label>
+              <input type="datetime-local" id="fHoraInicio" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora Fin (opcional)</label>
+              <input type="datetime-local" id="fHoraFin" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Consumo (kg)</label>
+              <input type="number" id="fConsumo" class="form-input" placeholder="0.00" min="0" step="0.01" />
+            </div>
+          </div>
+
+          <!-- Preview de cálculos -->
+          <div class="calc-preview" id="calcPreview" style="display:none;">
+            <div class="calc-row">
+              <span class="calc-lbl">Horas Acondicionadas:</span>
+              <span class="calc-val" id="prevHoras">—</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Tiempo Restante (24h):</span>
+              <span class="calc-val" id="prevRestante">—</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Stock Actual:</span>
+              <span class="calc-val" id="prevStock">—</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-lbl">Estado:</span>
+              <span class="calc-val" id="prevEstado">—</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="submitBtn">
+              <span>✚</span> Guardar Registro
+            </button>
+            <button type="button" class="btn-secondary" onclick="resetForm()">
+              ↺ Limpiar Formulario
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ─── SECCIÓN: TABLA DE REGISTROS ─── -->
+    <section class="section" id="section-tabla">
+      <!-- Filtros -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Fecha Desde</label>
+          <input type="date" id="filtFechaDesde" class="filter-input" oninput="applyFilters()" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Fecha Hasta</label>
+          <input type="date" id="filtFechaHasta" class="filter-input" oninput="applyFilters()" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Tipo Trigo</label>
+          <select id="filtTipo" class="filter-input" onchange="applyFilters()">
+            <option value="">Todos</option>
+            <option>Trigo AD Canad G°2</option>
+                <option>Trigo Soft RW</option>
+                <option>Trigo Pan Argentino</option>
+                <option>Trigo Pan CWRS</option>
+                <option>Trigo Canada CPSR</option>
+                <option>TRIGO HRW 11.0%</option>
+                <option>TRIGO HRW 12.0%</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Turno</label>
+          <select id="filtTurno" class="filter-input" onchange="applyFilters()">
+            <option value="">Todos</option>
+            <option>Mañana (06:00–14:00)</option>
+            <option>Tarde (14:00–22:00)</option>
+            <option>Noche (22:00–06:00)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Estado</label>
+          <select id="filtEstado" class="filter-input" onchange="applyFilters()">
+            <option value="">Todos</option>
+            <option>Pendiente</option>
+            <option>En acondicionamiento</option>
+            <option>Acondicionado +24h</option>
+            <option>Listo para molienda</option>
+            <option>Vencido</option>
+          </select>
+        </div>
+        <button class="btn-ghost" onclick="clearFilters()">✕ Limpiar</button>
+      </div>
+
+      <div class="table-info-bar">
+        <span id="tableCount">0 registros</span>
+        <button class="btn-ghost small" onclick="exportToExcel()">↓ Exportar Excel</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Cantidad (kg)</th>
+              <th>Turno</th>
+              <th>Operador</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Horas Acond.</th>
+              <th>Restante</th>
+              <th>Consumo (kg)</th>
+              <th>Diferencia</th>
+              <th>Stock (kg)</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="15" class="td-empty">Sin registros</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── SECCIÓN: ALERTAS ─── -->
+    <section class="section" id="section-alertas">
+      <div class="section-header">
+        <h2 class="section-title">PANEL DE ALERTAS</h2>
+        <div class="section-subtitle">Lotes que requieren atención inmediata</div>
+      </div>
+      <div class="alerts-container" id="alertsContainer">
+        <div class="empty-state">
+          <div class="empty-icon">✓</div>
+          <div class="empty-title">Sin alertas activas</div>
+          <div class="empty-sub">Todos los lotes están en estado normal</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════
+       MODAL CONFIRMACIÓN
+  ═══════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-icon" id="modalIcon">⚠</div>
+      <div class="modal-title" id="modalTitle">Confirmar acción</div>
+      <div class="modal-body" id="modalBody">¿Está seguro?</div>
+      <div class="modal-actions">
+        <button class="btn-danger" id="modalConfirm" onclick="">Confirmar</button>
+        <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+  ═══════════════════════════════════════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
